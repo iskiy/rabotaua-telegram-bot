@@ -1,0 +1,57 @@
+[
+  {
+    "centerId": 1,
+    "centerName": "Киев",
+    "regionName": null,
+    "vacancyCount": 0,
+    "locativeName": null,
+    "id": 1,
+    "ru": "Киев",
+    "ua": "Київ",
+    "en": "Kyiv"
+  },
+  {
+    "centerId": 14,
+    "centerName": "Луцк",
+    "regionName": null,
+    "vacancyCount": 0,
+    "locativeName": null,
+    "id": 66,
+    "ru": "Киверцы",
+    "ua": "Ківерці",
+    "en": "Kivertsi"
+  },
+  {
+    "centerId": 3,
+    "centerName": "Одесса",
+    "regionName": null,
+    "vacancyCount": 0,
+    "locativeName": null,
+    "id": 346,
+    "ru": "Килия",
+    "ua": "Кілія",
+    "en": "Kiliia"
+  },
+  {
+    "centerId": 9,
+    "centerName": "Запорожье",
+    "regionName": null,
+    "vacancyCount": 0,
+    "locativeName": null,
+    "id": 583,
+    "ru": "Кирилловка",
+    "ua": "Кирилівка",
+    "en": "Kirillovka"
+  },
+  {
+    "centerId": 26,
+    "centerName": "Черновцы",
+    "regionName": null,
+    "vacancyCount": 0,
+    "locativeName": null,
+    "id": 543,
+    "ru": "Кицмань",
+    "ua": "Кіцмань",
+    "en": "Kitsman"
+  }
+]
