@@ -21,10 +21,10 @@ func (b *RabotaUABot) handleCallbackQuery(query *tgbotapi.CallbackQuery) error {
 		if params.Page <= 0 {
 			return nil
 		}
-		params.Page = params.Page - 1
+		params.Page--
 		return b.updateViewPage(id, params, query)
 	case nextSign:
-		params.Page = params.Page + 1
+		params.Page++
 		return b.updateViewPage(id, params, query)
 	default:
 		return nil

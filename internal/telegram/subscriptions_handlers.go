@@ -3,7 +3,7 @@ package telegram
 import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	database "github.com/iskiy/rabotaua-telegram-bot/internal/database"
+	"github.com/iskiy/rabotaua-telegram-bot/internal/database"
 	"github.com/iskiy/rabotaua-telegram-bot/pkg/rabotaua"
 	"log"
 	"sync"
@@ -15,7 +15,7 @@ func (b *RabotaUABot) handleAddSubscriptionsState(message *tgbotapi.Message) err
 		return b.handleMainMenuCommand(message)
 	}
 	chatID := message.Chat.ID
-	parametersID, _, err := b.getParameterIDFromMessage(message)
+	parametersID, _, err := b.getParameterIDFromUser(message)
 	if err != nil {
 		return err
 	}
@@ -38,30 +38,42 @@ func (b *RabotaUABot) handleAddSubscriptionsButton(message *tgbotapi.Message) er
 	return b.createParametersMenu(message, AddSubscriptionState)
 }
 
-func (b *RabotaUABot) createParametersMenu(message *tgbotapi.Message, newUserState int) error {
+func (b *RabotaUABot) handleDeleteSubscriptionsButton(message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
-	userParams, err := b.db.GetUserParameters(chatID)
+	userParams, err := b.db.GetUserParametersInSubs(chatID)
 	if err != nil {
 		return err
 	}
 	if len(userParams) == 0 {
-		return b.sendMessage(chatID, "Йойк, у тебе нема параметрів, додай їх будь ласка", nil)
+		return b.sendMessage(chatID, "В тебе нема підписок, щоб щось видаляти.", nil)
 	}
-	err = b.updateUserState(chatID, newUserState)
+	return b.printParameters("Введи номер підписки, яку ти хочеш видалити\n\n", DeleteSubscriptionState, userParams, message)
+}
+
+func (b *RabotaUABot) handleDeleteSubscriptionsState(message *tgbotapi.Message) error {
+	chatID := message.Chat.ID
+	if message.Text == cancelButton.Text {
+		return b.handleMainMenuState(message)
+	}
+	id, err := b.getSubscriptionIDFromUser(message)
 	if err != nil {
 		return err
 	}
-	text, err := b.generateUserParametersTextMenu(userParams)
+	err = b.db.DeleteSubscription(chatID, id)
 	if err != nil {
 		return err
 	}
-	return b.sendMessage(chatID, text, cancelKeyboard)
+	err = b.sendMessage(chatID, "Вибрана підписка успішно видалена", nil)
+	if err != nil {
+		return err
+	}
+	return b.handleMainMenuCommand(message)
 }
 
 func (b *RabotaUABot) manageSubscriptions() {
 	wg := sync.WaitGroup{}
 	for {
-		subs, err := b.db.GetSubscriptions()
+		subs, err := b.db.GetAllSubscriptions()
 		if err != nil {
 			log.Println(err.Error())
 			return
@@ -71,7 +83,7 @@ func (b *RabotaUABot) manageSubscriptions() {
 			go b.sendSubscriptionMassage(&wg, s)
 		}
 		wg.Wait()
-		time.Sleep(time.Second * 30)
+		time.Sleep(time.Minute * 1)
 	}
 }
 
@@ -121,14 +133,6 @@ func (b *RabotaUABot) sendSubscriptionMassage(wg *sync.WaitGroup, s database.Sub
 		log.Printf("UpdateSubscriptionTime error, %s\n", err.Error())
 		return
 	}
-}
-
-func (b *RabotaUABot) getVacancyParametersString(p rabotaua.VacancyParameters) (string, error) {
-	cityName, err := b.db.GetCityName(p.CityID)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("Посада: %s, місто: %s, вид зайнятості: %s", p.Keywords, cityName, b.schedulesMap[p.ScheduleID]), nil
 }
 
 func getVacanciesAfterSubTime(vacancy []rabotaua.Vacancy, subTime time.Time) []rabotaua.Vacancy {

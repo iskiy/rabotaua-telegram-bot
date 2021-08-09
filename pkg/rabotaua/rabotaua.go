@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	CantFindCityError = errors.New("can`t find city: %s")
+	CantFindCityError = errors.New("can`t find city: ")
 )
 
 type RabotaClient struct {

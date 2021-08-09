@@ -75,7 +75,6 @@ func TestGetVacanciesFromParameters(t *testing.T) {
 		fmt.Println(err.Error())
 		return
 	}
-
 }
 
 func BenchmarkMockGetVacancies(b *testing.B) {

@@ -3,6 +3,7 @@ package telegram
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/iskiy/rabotaua-telegram-bot/pkg/rabotaua"
+	"log"
 	"strings"
 )
 
@@ -33,6 +34,10 @@ func (b *RabotaUABot) handleAddParametersCityState(message *tgbotapi.Message) er
 	chatID := message.Chat.ID
 	switch message.Text {
 	case cancelButton.Text:
+		err := b.db.DeleteLastInsertedParameter(chatID)
+		if err != nil {
+			log.Println(err.Error())
+		}
 		return b.handleMainMenuCommand(message)
 	case cityButton.Text:
 		err := b.updateUserState(chatID, AddParametersScheduleState)
@@ -64,10 +69,17 @@ func (b *RabotaUABot) stepToSchedulesState(message *tgbotapi.Message) error {
 
 func (b *RabotaUABot) handleAddParametersScheduleState(message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
-	if message.Text == cancelButton.Text || message.Text == cityButton.Text {
+	switch message.Text {
+	case cancelButton.Text:
+		err := b.db.DeleteLastInsertedParameter(chatID)
+		if err != nil {
+			log.Println(err)
+		}
+		fallthrough
+	case cityButton.Text:
 		return b.handleMainMenuCommand(message)
-	} else {
-		id, err := getIDFromTextMenu(message.Text)
+	default:
+		id, err := getIDFromUser(message.Text)
 		if err != nil || id > len(b.schedulesMap) || id <= 0 {
 			return b.sendMessage(chatID, "Ти ввів неправильний номер виду зайнятості", nil)
 		}
@@ -79,4 +91,28 @@ func (b *RabotaUABot) handleAddParametersScheduleState(message *tgbotapi.Message
 		}
 		return b.handleMainMenuCommand(message)
 	}
+}
+
+func (b *RabotaUABot) handleDeleteParametersButton(message *tgbotapi.Message) error {
+	return b.createParametersMenu(message, DeleteParametersState)
+}
+
+func (b *RabotaUABot) handleDeleteParametersState(message *tgbotapi.Message) error {
+	chatID := message.Chat.ID
+	if message.Text == cancelButton.Text {
+		return b.handleMainMenuCommand(message)
+	}
+	parameterID, _, err := b.getParameterIDFromUser(message)
+	if err != nil {
+		return err
+	}
+	err = b.db.DeleteParameter(chatID, parameterID)
+	if err != nil {
+		return err
+	}
+	err = b.sendMessage(chatID, "Вибраний параметер успішно видалений", nil)
+	if err != nil {
+		return err
+	}
+	return b.handleMainMenuCommand(message)
 }

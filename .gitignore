@@ -2,3 +2,8 @@
 .bin
 
 .env
+/internal/database/coverage.out
+/pkg/rabotaua/coverage.out
+/storage
+/storage-shm
+/storage-wal

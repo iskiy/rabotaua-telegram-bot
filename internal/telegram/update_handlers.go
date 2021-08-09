@@ -3,24 +3,23 @@ package telegram
 import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	database "github.com/iskiy/rabotaua-telegram-bot/internal/database"
 	"log"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 var (
-	schedulesText          string
-	viewVacanciesButton    = tgbotapi.NewKeyboardButton("Переглянути вакансії")
-	addParametersButton    = tgbotapi.NewKeyboardButton("Додати параметри для пошуку")
-	addSubscriptionsButton = tgbotapi.NewKeyboardButton("Додати підписку")
-	mainMenuKeyboard       = tgbotapi.NewReplyKeyboard(
+	schedulesText             string
+	viewVacanciesButton       = tgbotapi.NewKeyboardButton("Переглянути вакансії")
+	addParametersButton       = tgbotapi.NewKeyboardButton("Додати параметри для пошуку")
+	addSubscriptionsButton    = tgbotapi.NewKeyboardButton("Додати підписку")
+	deleteParametersButton    = tgbotapi.NewKeyboardButton("Видалити параметри")
+	deleteSubscriptionsButton = tgbotapi.NewKeyboardButton("Видалити підписку")
+
+	mainMenuKeyboard = tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButtonRow(
 			viewVacanciesButton, addParametersButton,
 		),
 		tgbotapi.NewKeyboardButtonRow(
-			addSubscriptionsButton,
+			addSubscriptionsButton, deleteSubscriptionsButton, deleteParametersButton,
 		),
 	)
 
@@ -50,7 +49,9 @@ const (
 	AddParametersKeywordsState
 	AddParametersCityState
 	AddParametersScheduleState
+	DeleteParametersState
 	AddSubscriptionState
+	DeleteSubscriptionState
 )
 
 const (
@@ -115,6 +116,10 @@ func (b *RabotaUABot) handleMessage(message *tgbotapi.Message) {
 		err = b.handleViewVacanciesState(message)
 	case AddSubscriptionState:
 		err = b.handleAddSubscriptionsState(message)
+	case DeleteParametersState:
+		err = b.handleDeleteParametersState(message)
+	case DeleteSubscriptionState:
+		err = b.handleDeleteSubscriptionsState(message)
 	}
 	if err != nil {
 		log.Println(err.Error())
@@ -134,49 +139,13 @@ func (b *RabotaUABot) handleMainMenuState(message *tgbotapi.Message) error {
 		return b.sendMessage(chatID, "Введи назву посади", cityKeyboard)
 	case addSubscriptionsButton.Text:
 		return b.handleAddSubscriptionsButton(message)
+	case deleteParametersButton.Text:
+		return b.handleDeleteParametersButton(message)
+	case deleteSubscriptionsButton.Text:
+		return b.handleDeleteSubscriptionsButton(message)
 	default:
 		return b.sendMessage(chatID, "Я не знаю що ти від мене хочеш", nil)
 	}
-}
-
-func getIDFromTextMenu(text string) (int, error) {
-	return strconv.Atoi(strings.Split(text, " ")[0])
-}
-
-func (b *RabotaUABot) generateUserParametersTextMenu(p []database.UserParameters) (string, error) {
-	paramsLen := len(p)
-	var lines = make([]string, paramsLen)
-	for i := 0; i < paramsLen; i++ {
-		cityName, err := b.db.GetCityName(p[i].Params.CityID)
-		if err != nil {
-			return "", err
-		}
-		lines[i] = fmt.Sprintf("%d Посада: %s, місто: %s, вид зайнятості %s", p[i].ID,
-			p[i].Params.Keywords, cityName, b.schedulesMap[p[i].Params.ScheduleID])
-	}
-	sort.Strings(lines)
-	paramsLines := strings.Join(lines, "\n")
-	return fmt.Sprintf("Введи номер параметру який ти хочеш використати\n\n") + paramsLines, nil
-}
-
-func (b *RabotaUABot) getSchedulesText() string {
-	lines := make([]string, 0, 7)
-	for k, v := range b.schedulesMap {
-		lines = append(lines, fmt.Sprintf("%d %s \n", k, v))
-	}
-	sort.Strings(lines)
-	return strings.Join(lines, "")
-}
-
-func (b *RabotaUABot) sendMessage(chatID int64, text string, replyMarkup interface{}) error {
-	msg := tgbotapi.NewMessage(chatID, text)
-	if replyMarkup != nil {
-		msg.ReplyMarkup = replyMarkup
-	}
-	msg.DisableWebPagePreview = true
-	msg.ParseMode = "html"
-	_, err := b.bot.Send(msg)
-	return err
 }
 
 func (b *RabotaUABot) updateUserState(chatID int64, state int) error {
