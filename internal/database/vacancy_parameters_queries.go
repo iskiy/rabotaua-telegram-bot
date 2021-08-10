@@ -26,7 +26,7 @@ func (s *Storage) getIntValueFromQueryForChatID(chatID int64, query string) (int
 }
 
 func (s *Storage) InsertVacancyParameters(chatID int64, p rabotaua.VacancyParameters) (UserParameters, error) {
-	quantityUserParameters, err := s.getQuantityParametersForUser(chatID)
+	quantityUserParameters, err := s.GetLastInsertedParameterIDForUser(chatID)
 	if err != nil {
 		return UserParameters{}, err
 	}
@@ -90,8 +90,10 @@ func (s *Storage) GetUserParameters(chatID int64) ([]UserParameters, error) {
 }
 
 func (s *Storage) GetUserParametersInSubs(chatID int64) ([]UserParameters, error) {
-	query := `SELECT subscriptions.parameters_id, keywords, city_id, schedule_id FROM subscriptions INNER JOIN vacancy_parameters v  ON subscriptions.parameters_id = v.parameters_id 
-			WHERE subscriptions.chat_id = ? ORDER BY subscriptions.parameters_id ASC`
+	query := `SELECT s.parameters_id, keywords, city_id, schedule_id 
+			FROM subscriptions s INNER JOIN vacancy_parameters v ON s.parameters_id = v.parameters_id AND s.chat_id = v.chat_id 
+			WHERE s.chat_id = ? 
+			ORDER BY s.parameters_id ASC`
 	return s.getUserParametersFromQueryAndChatID(chatID, query)
 }
 
@@ -145,6 +147,10 @@ func (s *Storage) GetParameter(chatID int64, parametersID int) (rabotaua.Vacancy
 }
 
 func (s *Storage) DeleteParameter(chatID int64, parametersID int) error {
-	query := "DELETE FROM vacancy_parameters WHERE chat_ID = ? AND parameters_id = ?"
+	err := s.DeleteSubscription(chatID, parametersID)
+	if err != nil {
+		return err
+	}
+	query := "DELETE FROM vacancy_parameters WHERE chat_ID = ? AND parameters_id = ?;"
 	return s.execQuery(query, nil, chatID, parametersID)
 }

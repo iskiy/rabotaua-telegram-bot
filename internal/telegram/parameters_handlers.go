@@ -13,7 +13,7 @@ func (b *RabotaUABot) handleAddParametersKeywordState(message *tgbotapi.Message)
 	}
 	chatID := message.Chat.ID
 	var keywords string
-	if message.Text == cityButton.Text {
+	if message.Text == whateverButton.Text {
 		keywords = ""
 	} else {
 		keywords = strings.TrimSpace(strings.ToLower(message.Text))
@@ -27,7 +27,7 @@ func (b *RabotaUABot) handleAddParametersKeywordState(message *tgbotapi.Message)
 	if err != nil {
 		return err
 	}
-	return b.sendMessage(chatID, "Введи назву міста", cityKeyboard)
+	return b.sendMessage(chatID, cfg.Msg.EnterCity, parametersKeyboard)
 }
 
 func (b *RabotaUABot) handleAddParametersCityState(message *tgbotapi.Message) error {
@@ -39,7 +39,7 @@ func (b *RabotaUABot) handleAddParametersCityState(message *tgbotapi.Message) er
 			log.Println(err.Error())
 		}
 		return b.handleMainMenuCommand(message)
-	case cityButton.Text:
+	case whateverButton.Text:
 		err := b.updateUserState(chatID, AddParametersScheduleState)
 		if err != nil {
 			return err
@@ -49,7 +49,7 @@ func (b *RabotaUABot) handleAddParametersCityState(message *tgbotapi.Message) er
 		city, err := b.client.GetCityFromName(message.Text)
 		if err != nil {
 			if err == rabotaua.CantFindCityError {
-				return b.sendMessage(chatID, "Не вдалось знайти це місто в базі даних, спробуй щось інше", nil)
+				return b.sendMessage(chatID, cfg.Msg.UndefinedCity, nil)
 			}
 			return err
 		}
@@ -64,7 +64,7 @@ func (b *RabotaUABot) stepToSchedulesState(message *tgbotapi.Message) error {
 	if err := b.updateUserState(message.Chat.ID, AddParametersScheduleState); err != nil {
 		return err
 	}
-	return b.sendMessage(message.Chat.ID, "Тепер вибери номер виду зайнятості:\n"+schedulesText, cityKeyboard)
+	return b.sendMessage(message.Chat.ID, cfg.Msg.EnterEmploymentTypeNum+schedulesText, parametersKeyboard)
 }
 
 func (b *RabotaUABot) handleAddParametersScheduleState(message *tgbotapi.Message) error {
@@ -76,17 +76,17 @@ func (b *RabotaUABot) handleAddParametersScheduleState(message *tgbotapi.Message
 			log.Println(err)
 		}
 		fallthrough
-	case cityButton.Text:
+	case whateverButton.Text:
 		return b.handleMainMenuCommand(message)
 	default:
 		id, err := getIDFromUser(message.Text)
 		if err != nil || id > len(b.schedulesMap) || id <= 0 {
-			return b.sendMessage(chatID, "Ти ввів неправильний номер виду зайнятості", nil)
+			return b.sendMessage(chatID, cfg.Msg.WrongEmploymentTypeNum, nil)
 		}
 		if err := b.db.UpdateLastInsertedParameterScheduleID(chatID, id); err != nil {
 			return err
 		}
-		if err := b.sendMessage(chatID, "Вітаю, параметри були успішно додані", nil); err != nil {
+		if err := b.sendMessage(chatID, cfg.Msg.AddParamsSuccess, nil); err != nil {
 			return err
 		}
 		return b.handleMainMenuCommand(message)
@@ -108,9 +108,10 @@ func (b *RabotaUABot) handleDeleteParametersState(message *tgbotapi.Message) err
 	}
 	err = b.db.DeleteParameter(chatID, parameterID)
 	if err != nil {
+		log.Println(err.Error())
 		return err
 	}
-	err = b.sendMessage(chatID, "Вибраний параметер успішно видалений", nil)
+	err = b.sendMessage(chatID, cfg.Msg.DeleteParameterSuccess, nil)
 	if err != nil {
 		return err
 	}

@@ -52,12 +52,9 @@ func initStorageTables(dbPool *sqlitex.Pool) error {
 	}
 	err = execQueryWithoutParameters(dbPool, `CREATE TABLE IF NOT EXISTS vacancies_view( 
 		view_id INTEGER PRIMARY KEY AUTOINCREMENT, 
-		parameters_id INTEGER NOT NULL, 
-		chat_id INTEGER NOT NULL, 
-		page INTEGER NOT NULL, 
-		FOREIGN KEY (parameters_id) 
-		REFERENCES vacancy_parameters(parameters_id) ON UPDATE CASCADE ON DELETE CASCADE, 
-		FOREIGN KEY(chat_id) REFERENCES vacancy_parameters(chat_id) ON UPDATE CASCADE ON DELETE CASCADE);`)
+		parameters_id INTEGER NOT NULL,  
+		chat_id INTEGER NOT NULL,
+		page INTEGER NOT NULL);`)
 	if err != nil {
 		return err
 	}
@@ -68,12 +65,16 @@ func initStorageTables(dbPool *sqlitex.Pool) error {
 		return err
 	}
 	err = execQueryWithoutParameters(dbPool, `CREATE TABLE IF NOT EXISTS 
-		subscriptions(chat_id INTEGER NOT NULL, 
-		parameters_id INTEGER NOT NULL, 
+		subscriptions(
+		chat_id INTEGER NOT NULL, 
+		parameters_id INTEGER NOT NULL,
 		sub_time VARCHAR NOT NULL, 
-		PRIMARY KEY(chat_id, parameters_id), 
-		FOREIGN KEY (parameters_id) REFERENCES vacancy_parameters(parameters_id) ON UPDATE CASCADE ON DELETE CASCADE, 
-		FOREIGN KEY(chat_id) REFERENCES vacancy_parameters(chat_id) ON UPDATE CASCADE ON DELETE CASCADE);`)
+		PRIMARY KEY(chat_id, parameters_id),
+		FOREIGN KEY(chat_id, parameters_id) REFERENCES vacancy_parameters(chat_id, parameters_id) ON UPDATE CASCADE ON DELETE CASCADE);`)
+	if err != nil {
+		return err
+	}
+	err = execQueryWithoutParameters(dbPool, "PRAGMA foreign_keys=on;")
 	if err != nil {
 		return err
 	}

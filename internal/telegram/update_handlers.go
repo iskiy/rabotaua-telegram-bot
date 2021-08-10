@@ -6,34 +6,6 @@ import (
 	"log"
 )
 
-var (
-	schedulesText             string
-	viewVacanciesButton       = tgbotapi.NewKeyboardButton("Переглянути вакансії")
-	addParametersButton       = tgbotapi.NewKeyboardButton("Додати параметри для пошуку")
-	addSubscriptionsButton    = tgbotapi.NewKeyboardButton("Додати підписку")
-	deleteParametersButton    = tgbotapi.NewKeyboardButton("Видалити параметри")
-	deleteSubscriptionsButton = tgbotapi.NewKeyboardButton("Видалити підписку")
-
-	mainMenuKeyboard = tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			viewVacanciesButton, addParametersButton,
-		),
-		tgbotapi.NewKeyboardButtonRow(
-			addSubscriptionsButton, deleteSubscriptionsButton, deleteParametersButton,
-		),
-	)
-
-	cancelButton   = tgbotapi.NewKeyboardButton("Відмінити")
-	cancelKeyboard = tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(cancelButton),
-	)
-
-	cityButton   = tgbotapi.NewKeyboardButton("Та мені байдуже")
-	cityKeyboard = tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(cityButton, cancelButton),
-	)
-)
-
 const (
 	nextSign = "r"
 	prevSign = "l"
@@ -63,7 +35,7 @@ func (b *RabotaUABot) handleCommand(message *tgbotapi.Message) {
 	chatID := message.Chat.ID
 	switch message.Command() {
 	case startCommand:
-		err := b.sendMessage(chatID, "Привіт, я допоможу тобі знайти роботу твоєї мрії", nil)
+		err := b.sendMessage(chatID, cfg.Msg.Start, nil)
 		if err != nil {
 			log.Println(err.Error())
 			return
@@ -76,7 +48,7 @@ func (b *RabotaUABot) handleCommand(message *tgbotapi.Message) {
 			return
 		}
 	default:
-		err := b.sendMessage(chatID, "Я не знаю що ти від мене хочеш, я таке робити не вмію.", nil)
+		err := b.sendMessage(chatID, cfg.Msg.UndefinedCommand, nil)
 		if err != nil {
 			log.Println(err.Error())
 			return
@@ -89,7 +61,7 @@ func (b *RabotaUABot) handleMainMenuCommand(message *tgbotapi.Message) error {
 	if err != nil {
 		return nil
 	}
-	return b.sendMessage(message.Chat.ID, "Ти в головному меню", mainMenuKeyboard)
+	return b.sendMessage(message.Chat.ID, cfg.Msg.MainMenu, mainMenuKeyboard)
 }
 
 func (b *RabotaUABot) handleMessage(message *tgbotapi.Message) {
@@ -136,7 +108,7 @@ func (b *RabotaUABot) handleMainMenuState(message *tgbotapi.Message) error {
 		if err != nil {
 			return err
 		}
-		return b.sendMessage(chatID, "Введи назву посади", cityKeyboard)
+		return b.sendMessage(chatID, cfg.Msg.EnterPostname, parametersKeyboard)
 	case addSubscriptionsButton.Text:
 		return b.handleAddSubscriptionsButton(message)
 	case deleteParametersButton.Text:
@@ -144,7 +116,7 @@ func (b *RabotaUABot) handleMainMenuState(message *tgbotapi.Message) error {
 	case deleteSubscriptionsButton.Text:
 		return b.handleDeleteSubscriptionsButton(message)
 	default:
-		return b.sendMessage(chatID, "Я не знаю що ти від мене хочеш", nil)
+		return b.sendMessage(chatID, cfg.Msg.Undefined, nil)
 	}
 }
 

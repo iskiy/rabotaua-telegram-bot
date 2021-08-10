@@ -21,13 +21,13 @@ func (b *RabotaUABot) handleAddSubscriptionsState(message *tgbotapi.Message) err
 	}
 	isPresent, err := b.db.IsSubscriptionPresent(chatID, parametersID)
 	if isPresent {
-		return b.sendMessage(chatID, "Ти вже підписаний на цей параметр, вибери якийсь інший", cancelKeyboard)
+		return b.sendMessage(chatID, cfg.Msg.AlreadySub, cancelKeyboard)
 	}
 	err = b.db.InsertSubscription(chatID, parametersID, message.Time())
 	if err != nil {
 		return err
 	}
-	err = b.sendMessage(chatID, "Чудово, тепер якщо з'являться нові вакансії для параметра, я тобі їх надішлю", nil)
+	err = b.sendMessage(chatID, cfg.Msg.AddSubSuccess, nil)
 	if err != nil {
 		return err
 	}
@@ -45,15 +45,15 @@ func (b *RabotaUABot) handleDeleteSubscriptionsButton(message *tgbotapi.Message)
 		return err
 	}
 	if len(userParams) == 0 {
-		return b.sendMessage(chatID, "В тебе нема підписок, щоб щось видаляти.", nil)
+		return b.sendMessage(chatID, cfg.Msg.EmptySubs, nil)
 	}
-	return b.printParameters("Введи номер підписки, яку ти хочеш видалити\n\n", DeleteSubscriptionState, userParams, message)
+	return b.printParameters(cfg.Msg.EnterSubsNum, DeleteSubscriptionState, userParams, message)
 }
 
 func (b *RabotaUABot) handleDeleteSubscriptionsState(message *tgbotapi.Message) error {
 	chatID := message.Chat.ID
 	if message.Text == cancelButton.Text {
-		return b.handleMainMenuState(message)
+		return b.handleMainMenuCommand(message)
 	}
 	id, err := b.getSubscriptionIDFromUser(message)
 	if err != nil {
@@ -63,7 +63,7 @@ func (b *RabotaUABot) handleDeleteSubscriptionsState(message *tgbotapi.Message) 
 	if err != nil {
 		return err
 	}
-	err = b.sendMessage(chatID, "Вибрана підписка успішно видалена", nil)
+	err = b.sendMessage(chatID, cfg.Msg.DeleteSubSuccess, nil)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (b *RabotaUABot) manageSubscriptions() {
 			go b.sendSubscriptionMassage(&wg, s)
 		}
 		wg.Wait()
-		time.Sleep(time.Minute * 1)
+		time.Sleep(time.Minute * 2)
 	}
 }
 
@@ -119,7 +119,7 @@ func (b *RabotaUABot) sendSubscriptionMassage(wg *sync.WaitGroup, s database.Sub
 			to = len(res)
 		}
 		if i == 0 {
-			msgText += fmt.Sprintf("Я знайшов для тебе нові вакансії за твоїми підпискою \n %s: \n", vacancyParametersStr)
+			msgText += fmt.Sprintf(cfg.Msg.FoundSub, vacancyParametersStr)
 		}
 		msgText += getVacanciesString(res[i:to])
 		err = b.sendMessage(s.ChatID, msgText, nil)

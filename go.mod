@@ -11,4 +11,5 @@ require (
 	github.com/mailru/easyjson v0.7.7
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/valyala/fasthttp v1.28.0
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

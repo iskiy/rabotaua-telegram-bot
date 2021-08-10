@@ -14,12 +14,17 @@ func (b *RabotaUABot) handleCallbackQuery(query *tgbotapi.CallbackQuery) error {
 	}
 	params, err := b.db.GetVacancyParametersPage(id, count)
 	if err != nil {
-		return err
+		_, err = b.bot.AnswerCallbackQuery(tgbotapi.NewCallback(query.ID, cfg.Msg.UndefinedView))
+		if err != nil {
+			return err
+		}
+		return nil
 	}
 	switch direction {
 	case prevSign:
 		if params.Page <= 0 {
-			return nil
+			_, err = b.bot.AnswerCallbackQuery(tgbotapi.NewCallback(query.ID, cfg.Msg.LeftBorder))
+			return err
 		}
 		params.Page--
 		return b.updateViewPage(id, params, query)
@@ -37,7 +42,8 @@ func (b *RabotaUABot) updateViewPage(viewID int, params rabotaua.VacancyParamete
 		return err
 	}
 	if searchResult.Total <= count*params.Page {
-		return nil
+		_, err = b.bot.AnswerCallbackQuery(tgbotapi.NewCallback(query.ID, cfg.Msg.RightBorder))
+		return err
 	}
 	err = b.db.UpdateViewVacanciesPage(viewID, params.Page)
 	if err != nil {

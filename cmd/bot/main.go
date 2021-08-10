@@ -23,7 +23,6 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	//botAPI.Debug = true
 	log.Printf("Authorized on account %s", botAPI.Self.UserName)
 	client := rabotaua.NewRabotaClient()
 	storage, err := database.NewStorage(getEnvField("DB_PATH"))
@@ -31,6 +30,10 @@ func main() {
 		log.Fatal(err.Error())
 	}
 	schedulesMap, err := client.GetSchedulesMap()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	err = telegram.Init()
 	if err != nil {
 		log.Fatal(err.Error())
 	}

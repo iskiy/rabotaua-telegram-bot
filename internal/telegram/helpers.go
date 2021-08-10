@@ -26,7 +26,7 @@ func (b *RabotaUABot) getSubscriptionIDFromUser(message *tgbotapi.Message) (int,
 	if err != nil {
 		return -1, err
 	}
-	id, _, err := b.getIDFromParameters("Введено неправильний номер підписки", subsParams, message)
+	id, _, err := b.getIDFromParameters(cfg.Msg.WrongSubNum, subsParams, message)
 	return id, err
 }
 
@@ -35,13 +35,17 @@ func (b *RabotaUABot) getParameterIDFromUser(message *tgbotapi.Message) (int, []
 	if err != nil {
 		return -1, []database.UserParameters{}, err
 	}
-	return b.getIDFromParameters("Введено неправильний номер параметра", parameters, message)
+	return b.getIDFromParameters(cfg.Msg.WrongParamsNum, parameters, message)
 }
 
 func (b *RabotaUABot) getIDFromParameters(wrongNumText string, params []database.UserParameters, message *tgbotapi.Message) (int, []database.UserParameters, error) {
 	IDFromUser, err := getIDFromUser(message.Text)
 	if err != nil || IDFromUser > len(params) || IDFromUser <= 0 {
-		return -1, []database.UserParameters{}, b.sendMessage(message.Chat.ID, wrongNumText, nil)
+		sendError := b.sendMessage(message.Chat.ID, wrongNumText, nil)
+		if err != nil {
+			return -1, []database.UserParameters{}, sendError
+		}
+		return -1, []database.UserParameters{}, fmt.Errorf("wrong parameter from user")
 	}
 	return params[IDFromUser-1].ID, params, nil
 }
@@ -53,9 +57,9 @@ func (b *RabotaUABot) createParametersMenu(message *tgbotapi.Message, newUserSta
 		return err
 	}
 	if len(userParams) == 0 {
-		return b.sendMessage(chatID, "Йойк, у тебе нема параметрів, додай їх будь ласка", nil)
+		return b.sendMessage(chatID, cfg.Msg.EmptyParameters, nil)
 	}
-	return b.printParameters("Введи номер потрібного параметра\n\n", newUserState, userParams, message)
+	return b.printParameters(cfg.Msg.EnterParamNum, newUserState, userParams, message)
 }
 
 func (b *RabotaUABot) printParameters(prefix string, newUserState int, params []database.UserParameters, message *tgbotapi.Message) error {

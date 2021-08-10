@@ -18,6 +18,41 @@ func TestInitStorage(t *testing.T) {
 	testStorage = storage
 }
 
+func TestStorage_DeleteParameter2(t *testing.T) {
+	var chatID int64 = 1
+	params := rabotaua.VacancyParameters{Keywords: "java", CityID: 1, ScheduleID: 1}
+	_, err := testStorage.InsertVacancyParameters(chatID, params)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	_, err = testStorage.InsertVacancyParameters(chatID, params)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	err = testStorage.InsertSubscription(chatID, 1, time.Now())
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	err = testStorage.InsertSubscription(chatID, 2, time.Now())
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	err = testStorage.DeleteParameter(chatID, 1)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	err = testStorage.DeleteParameter(chatID, 2)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	subs, err := testStorage.GetAllSubscriptions()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if len(subs) != 0 {
+		t.Errorf("delete parameters and cascade error, len: %d", len(subs))
+	}
+}
 func TestStorage_VacancyParameters(t *testing.T) {
 	var chatID int64 = 1
 	params := rabotaua.VacancyParameters{Keywords: "java", CityID: 1, ScheduleID: 1}

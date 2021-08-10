@@ -21,14 +21,14 @@ func (b *RabotaUABot) handleViewVacanciesState(message *tgbotapi.Message) error 
 	if err != nil {
 		return err
 	}
-	parametersPage := rabotaua.VacancyParametersPage{VacancyParameters: parameters[parameterID-1].Params, Count: count}
+	parametersPage := rabotaua.VacancyParametersPage{VacancyParameters: parameters[len(parameters)-1].Params, Count: count}
 	searchResult, err := b.client.GetSearchResultFromParametersPage(parametersPage)
 	if err != nil {
 		return err
 	}
 	vacancies := searchResult.Vacancy
 	if len(vacancies) == 0 {
-		err = b.sendMessage(chatID, "На жаль не вдалось знайти підходящі вакансії, спробуй інші параметри", nil)
+		err = b.sendMessage(chatID, cfg.Msg.CantFindVacancies, nil)
 		if err != nil {
 			return err
 		}
