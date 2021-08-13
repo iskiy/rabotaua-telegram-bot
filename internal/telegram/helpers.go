@@ -5,6 +5,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/iskiy/rabotaua-telegram-bot/internal/database"
 	"github.com/iskiy/rabotaua-telegram-bot/pkg/rabotaua"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -47,6 +48,8 @@ func (b *RabotaUABot) getIDFromParameters(wrongNumText string, params []database
 		}
 		return -1, []database.UserParameters{}, fmt.Errorf("wrong parameter from user")
 	}
+	log.Println(IDFromUser)
+	log.Println(params[IDFromUser-1])
 	return params[IDFromUser-1].ID, params, nil
 }
 
@@ -94,10 +97,9 @@ func (b *RabotaUABot) generateUserParametersTextMenu(prefix string, p []database
 		if err != nil {
 			return "", err
 		}
-		lines[i] = fmt.Sprintf("%d Посада: %s, місто: %s, вид зайнятості %s", i+1,
+		lines[i] = fmt.Sprintf("<b>%d)</b> Посада: %s, місто: %s, вид зайнятості %s", i+1,
 			p[i].Params.Keywords, cityName, b.schedulesMap[p[i].Params.ScheduleID])
 	}
-	sort.Strings(lines)
 	paramsLines := strings.Join(lines, "\n")
 	return prefix + paramsLines, nil
 }

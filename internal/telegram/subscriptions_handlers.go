@@ -83,13 +83,12 @@ func (b *RabotaUABot) manageSubscriptions() {
 			go b.sendSubscriptionMassage(&wg, s)
 		}
 		wg.Wait()
-		time.Sleep(time.Minute * 2)
+		time.Sleep(time.Minute * 5)
 	}
 }
 
 func (b *RabotaUABot) sendSubscriptionMassage(wg *sync.WaitGroup, s database.Subscription) {
 	defer wg.Done()
-	log.Println("search vacancy for sub")
 	vacancyParameters, err := b.db.GetParameter(s.ChatID, s.ParametersID)
 	if err != nil {
 		log.Println(err)
@@ -104,7 +103,6 @@ func (b *RabotaUABot) sendSubscriptionMassage(wg *sync.WaitGroup, s database.Sub
 	updateTime := time.Now()
 	res := getVacanciesAfterSubTime(searchResult.Vacancy, s.SubTime)
 	if len(res) == 0 {
-		log.Println("len res = 0")
 		return
 	}
 	vacancyParametersStr, err := b.getVacancyParametersString(vacancyParameters)

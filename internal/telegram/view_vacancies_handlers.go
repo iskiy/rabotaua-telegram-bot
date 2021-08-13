@@ -4,6 +4,7 @@ import (
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/iskiy/rabotaua-telegram-bot/pkg/rabotaua"
+	"log"
 	"strconv"
 )
 
@@ -17,11 +18,16 @@ func (b *RabotaUABot) handleViewVacanciesState(message *tgbotapi.Message) error 
 		return b.handleMainMenuCommand(message)
 	}
 	parameterID, parameters, err := b.getParameterIDFromUser(message)
+	log.Printf("Param ID: %d\n", parameterID)
 	viewID, err := b.db.InsertVacanciesView(chatID, parameterID, 0)
 	if err != nil {
 		return err
 	}
-	parametersPage := rabotaua.VacancyParametersPage{VacancyParameters: parameters[len(parameters)-1].Params, Count: count}
+	idFromUser, err := getIDFromUser(message.Text)
+	if err != nil {
+		return err
+	}
+	parametersPage := rabotaua.VacancyParametersPage{VacancyParameters: parameters[idFromUser-1].Params, Count: count}
 	searchResult, err := b.client.GetSearchResultFromParametersPage(parametersPage)
 	if err != nil {
 		return err
